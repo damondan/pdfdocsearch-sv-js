@@ -199,6 +199,10 @@
 </svelte:head>
 
 <div class="container">
+	<nav class="routing">
+		<a href="/">home</a>
+		<a href="/diagram">diagram</a>
+	</nav>
 	{#if activeTab == 'results'}
 		<div class="download-r-checkall-buttons">
 			<input type="button" id="download-id" value="Download" onclick={handleDownloadPdfsForPdfBlock} />

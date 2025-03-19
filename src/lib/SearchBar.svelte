@@ -6,7 +6,7 @@
 	let searchQuery = $state('');
 	let previousSearches = $state([]);
 	let { selectedSubject, pdfBookTitles } = $props();
-	let showDropdown = $state('false');
+	let showDropdown = $state(false);
     let loading = $state(false);
 
 	const dispatch = createEventDispatcher();
@@ -86,12 +86,19 @@
 	};
 
 	const handleClickOutside = (event) => {
-		const dropdown = document.getElementById('search-dropdown');
+		const dropdown = document.getElementById('search-dropdn');
 		const inputField = document.getElementById('search');
 		if (dropdown?.contains(event.target) == false && inputField?.contains(event.target) == false) {
 			showDropdown = false; // Hide dropdown if clicked outside
 		}
 	};
+
+	function handleInputKeydown(event) {
+		if (event.key === 'Enter') {
+			console.log('Enter key pressed');
+			handleSearchDispatch();
+		}
+  	}
 
 	const handleDelete = (searchTerm) => {
 		previousSearches = previousSearches.filter((t) => t !== searchTerm);
@@ -112,6 +119,7 @@
 		placeholder="Search..."
 		bind:value={searchQuery}
 		on:click={handleInputClick}
+		on:keydown={handleInputKeydown}
     	autocomplete="off"
 	/>
 

@@ -83,10 +83,10 @@
 	//a PdfBookResult object that is than stored into a pdfBooksAsResultObjects array.
 	function handleLoadPdfDataFromPdfTab(event) {
 		mySearchData = event.detail;
-		console.log("Received search results in parent:", mySearchData);
+		console.log("IN HANDLELOADPDFDATAFROMPDFTAB");
 
-		if (
-			mySearchData.results != null && Object.keys(mySearchData.results).length > 0) {
+		if (mySearchData.results != null && Object.keys(mySearchData.results).length > 0) {
+			console.log("MYSEARCHDATA IF STATEMENT - NOT NULL AND LENGTH > 0 ");
 			pdfBooksRetFromSearch = Object.keys(mySearchData.results);
 			// Create PdfResult instances
 			pdfBooksAsResultObjects = [];
@@ -111,20 +111,17 @@
 					}
 				}
 			} else {
+				console.log("PDFBOOKSASRESULTOBJECTS IS SET TO EMPTY");
 				pdfBooksAsResultObjects = [];
 			}
-		} else if (mySearchData == "booksOverLimit") {
-			alert("Search limit is 25 books");
-			console.log("Book limit is 25");
-			pdfBooksAsResultObjects = [];
-		} else if (mySearchData == "Search took too long") {
-			alert("One minute Time Out.");
-			console.log("Book limit is 25");
-			pdfBooksAsResultObjects = [];
-		} else {
-			pdfBooksAsResultObjects = [];
-			console.log("No matches in handleLoadPdfDataFromPdfTab");
-			alert("No matches for " + $searchQueryWritable);
+		
+		} else if (mySearchData == "noPdfCheckBoxesChecked"){
+			console.log("NO Pdfs chosen");
+			alert("Choose a Pdf.");
+		}else if (mySearchData == "pdfsOverLimit"){
+			alert("Pdf book search limit is 25");
+		}else{
+			alert("Search returned 0 for " + $searchQueryWritable);
 		}
 	}
 
@@ -259,7 +256,7 @@
 		</div>
 	{/if}
 	<div class="header">
-		<h1>Pdf Search</h1>
+		<h1>Pdf Search JS</h1>
 		<SearchBar
 			{selectedSubject}
 			pdfBookTitles={pdfBookCheckFromPdfTab}

@@ -98,6 +98,21 @@ $color-background: #f5f5f5;
 				background-color: #34b23e;
 			}
         }
+        .total-count {
+            width: 150px;
+            height: 40px;
+            margin-left: 50px;
+            border-radius: 5px;
+            
+            p{
+              width: 100%;
+              color: black;
+              font-family: $font-family-primary-cursive;
+              font-weight: $font-weight-light;
+              font-size: 18px;
+              text-align: center;
+            }
+          }
 
         #checkall-id{
             width: 20px;

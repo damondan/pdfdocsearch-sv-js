@@ -19,6 +19,7 @@
 	let activeTab = $state("pdfs");
 	let checkedResults = [];
 	let isCheckAll = $state(false);
+	let totalCount = $state();
 
 	// onMount - receives passed { data } = $props(); from +page.server.js - setDataPdfSubjects - these are Pdf
 	// subjects and within is the pdf books or pdf content.
@@ -84,6 +85,7 @@
 	function handleLoadPdfDataFromPdfTab(event) {
 		mySearchData = event.detail;
 		console.log("IN HANDLELOADPDFDATAFROMPDFTAB");
+		showTotalCount(mySearchData.total);
 
 		if (mySearchData.results != null && Object.keys(mySearchData.results).length > 0) {
 			console.log("MYSEARCHDATA IF STATEMENT - NOT NULL AND LENGTH > 0 ");
@@ -224,6 +226,11 @@
 		pdfBooksAsResultObjects = pdfBooksAsResultObjects.filter(
 			(r) => r !== resultToDelete,
 		);
+		totalCount = pdfBooksAsResultObjects.length;
+	}
+
+	function showTotalCount(totalCnt){
+  		totalCount = totalCnt;
 	}
 </script>
 
@@ -242,8 +249,10 @@
 				type="button"
 				id="download-id"
 				value="Download"
-				onclick={handleDownloadPdfsForPdfBlock}
-			/>
+				onclick={handleDownloadPdfsForPdfBlock}/>
+				<div class= "total-count">
+					<p>Total Count is {totalCount}</p>
+				</div>
 		</div>
 	{:else}
 		<div class="download-r-checkall-buttons">

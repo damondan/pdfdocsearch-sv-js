@@ -24,6 +24,7 @@
 	// onMount - receives passed { data } = $props(); from +page.server.js - setDataPdfSubjects - these are Pdf
 	// subjects and within is the pdf books or pdf content.
 	onMount(() => {
+		console.log("onMount")
 		if (setDataPdfSubjects.length > 0) {
 			selectedSubject = setDataPdfSubjects[0]; // Set default to the first subject
 			handleLoadPdfTitlesFromSubject(selectedSubject); // Automatically trigger the fetch for the first subject
@@ -51,6 +52,7 @@
 	//handleLoadPdfTitlesFromSubject - takes a subject as argument and calls the node.js docker container api
 	//to return just the titles of those pdf books by subject or folder name
 	async function handleLoadPdfTitlesFromSubject(subject) {
+		console.log("In handleLoadPdfTitlesFromSubject");
 		try {
 			const response = await fetch(
 				`http://localhost:3001/api/pdf-titles/${subject}`,

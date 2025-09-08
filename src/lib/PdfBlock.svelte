@@ -2,25 +2,28 @@
 	import { createEventDispatcher } from 'svelte';
 
 	let { result } = $props();
+	
+	/** @type {boolean} */
 	let isExpanded = $state(false);
+	
 	const dispatch = createEventDispatcher();
+	
+	/** @type {boolean} */
 	let checked = $state(result?.isChecked ?? false);
 
-  //If the clicked element is inside the .pdf-checkbox - returns without expansion of the page text
-  //Outside of that, the click expands the page text. 
+	// This is a dispatch which returns result && checked to the parent +page.svelte main page. 
+	/**
+	 * Handles click events on the PDF block to toggle expansion
+	 * @param {Event} event - The click event
+	 */
 	function handleBlockClick(event) {
-		if (event.target.closest('.pdf-checkbox')) {
-			return; // Prevent expansion if clicking on checkbox or delete button
+		if (event.target) {
+			const target = /** @type {Element} */(event.target);
+			if (target.closest('.pdf-checkbox')) {
+				return; // Prevent expansion if clicking on checkbox or delete button
+			}
 		}
 		isExpanded = !isExpanded;
-	}
-
-	// This is a dispatch which returns result && checked to the parent +page.svelte main page. 
-	function handleCheckboxChangeDispatch(event) {
-		console.log('in handleCheckboxChangeDispatch');
-		checked = event.target.checked;
-		result.isChecked = checked;
-		dispatch('change', { result, checked });
 	}
 
   // This is a dispatch which returns result to the parent +page.svelte main page. 

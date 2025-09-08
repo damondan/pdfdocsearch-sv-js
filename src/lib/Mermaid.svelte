@@ -1,95 +1,384 @@
 <script>
-    import { onMount } from 'svelte';
-    import mermaid from 'mermaid';
-  
-    // The diagram definition to render
-    export let definition = '';
-    
-    export let type = 'default';
+    import { onMount } from "svelte";
+    import mermaid from "mermaid";
 
-    // Optional configuration
+    /** @type {string} */
+    export let definition = "";
+    
+    /** @type {"default" | "component" | "sequence" | "entity"} */
+    export let type = "default";
+    
+    /** @type {Record<string, any>} */
     export let config = {};
-    
+
+    /** @type {string} */
     let elementId = `mermaid-${Math.floor(Math.random() * 100000)}`;
-    let containerDiv;
+    
+    /** @type {HTMLDivElement | null} */
+    let containerDiv = null;
+    
+    /** @type {HTMLDivElement | null} */
+    let panZoomContainer = null;
+    
+    /** @type {boolean} */
     let isRendered = false;
-  
+
+    // Pan and zoom state
+    /** @type {number} */
+    let scale = 1;
+    
+    /** @type {number} */
+    let translateX = 0;
+    
+    /** @type {number} */
+    let translateY = 0;
+    
+    /** @type {boolean} */
+    let isDragging = false;
+    
+    /** @type {number} */
+    let lastMouseX = 0;
+    
+    /** @type {number} */
+    let lastMouseY = 0;
+
     onMount(async () => {
-      try {
-        // Initialize mermaid with default + custom config
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'default',
-          securityLevel: 'loose',
-          ...config
-        });
-        
-        // Use mermaid.render for better control
-        const { svg } = await mermaid.render(elementId, definition);
-        
-        // Insert the SVG content
-        if (containerDiv) {
-          containerDiv.innerHTML = svg;
-          isRendered = true;
-          
-          // Apply sizing to the rendered SVG
-          const svgElement = containerDiv.querySelector('svg');
-          if (svgElement) {
-          // Apply sizing based on diagram type
-          if (type === 'entity') {
-            // Smaller size for entity diagrams
-            svgElement.style.width = '20%';
-            svgElement.style.maxWidth = '700px';
-          } else if (type === 'sequence') {
-            // Medium size for sequence diagrams
-            svgElement.style.width = '90%';
-            svgElement.style.maxWidth = '800px';
-          } else {
-            // Default/component size
-            svgElement.style.width = '100%';
-            svgElement.style.maxWidth = '900px';
-          }
-          
-          // Common styling
-          svgElement.style.height = 'auto';
-          svgElement.style.margin = '0 auto';
-          svgElement.style.display = 'block';
+        try {
+            // Render the Mermaid diagram
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: "default",
+                securityLevel: "loose",
+                ...config,
+            });
+
+            const { svg } = await mermaid.render(elementId, definition);
+
+            if (containerDiv) {
+                containerDiv.innerHTML = svg;
+                isRendered = true;
+
+                const svgElement = containerDiv.querySelector("svg");
+                if (svgElement) {
+                    // Let SVG use its natural size
+                    svgElement.style.width = "auto";
+                    svgElement.style.height = "auto";
+                    svgElement.style.maxWidth = "none";
+                    svgElement.style.display = "block";
+                    svgElement.style.margin = "0";
+
+                    // Get natural dimensions and adjust container
+                    const bbox = svgElement.getBBox();
+                    const naturalWidth = bbox.width;
+                    const naturalHeight = bbox.height;
+
+                    if (panZoomContainer) {
+                        // Set container size to accommodate the diagram
+                        const containerHeight = Math.max(naturalHeight + 100, 400);
+                        panZoomContainer.style.height = `${Math.min(containerHeight, 800)}px`;
+                        
+                        // Center the diagram initially
+                        const containerRect = panZoomContainer.getBoundingClientRect();
+                        translateX = (containerRect.width - naturalWidth) / 2;
+                        translateY = (containerRect.height - naturalHeight) / 2;
+                        updateTransform();
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Mermaid rendering error:", error);
+            isRendered = true;
         }
-      }
-    } catch (error) {
-      console.error('Mermaid rendering error:', error);
+    });
+
+    /**
+     * Updates the CSS transform for the container based on current scale and translation values
+     */
+    function updateTransform() {
+        if (containerDiv) {
+            containerDiv.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            containerDiv.style.transformOrigin = "top left";
+        }
     }
-  });
-  </script>
-  
-  <div class="mermaid-container" class:entity-container={type === 'entity'}>
-    {#if !isRendered}
-      <div class="loading">Loading diagram...</div>
-    {/if}
-    <div bind:this={containerDiv} class="mermaid-output"></div>
-  </div>
-  
-  <style>
+
+    /**
+     * Increases the diagram scale for zooming in
+     */
+    function zoomIn() {
+        scale = Math.min(scale * 1.2, 5);
+        updateTransform();
+    }
+
+    /**
+     * Decreases the diagram scale for zooming out
+     */
+    function zoomOut() {
+        scale = Math.max(scale / 1.2, 0.2);
+        updateTransform();
+    }
+
+    /**
+     * Resets zoom to 100% and centers the diagram
+     */
+    function resetZoom() {
+        scale = 1;
+        if (panZoomContainer && containerDiv) {
+            const svgElement = containerDiv.querySelector("svg");
+            if (svgElement) {
+                const bbox = svgElement.getBBox();
+                const containerRect = panZoomContainer.getBoundingClientRect();
+                translateX = (containerRect.width - bbox.width) / 2;
+                translateY = (containerRect.height - bbox.height) / 2;
+            }
+        }
+        updateTransform();
+    }
+
+    /**
+     * Scales the diagram to fit within the container boundaries
+     */
+    function fitToWindow() {
+        if (panZoomContainer && containerDiv) {
+            const svgElement = containerDiv.querySelector("svg");
+            if (svgElement) {
+                const bbox = svgElement.getBBox();
+                const containerRect = panZoomContainer.getBoundingClientRect();
+                
+                const scaleX = (containerRect.width - 40) / bbox.width;
+                const scaleY = (containerRect.height - 40) / bbox.height;
+                scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond 100%
+                
+                translateX = (containerRect.width - bbox.width * scale) / 2;
+                translateY = (containerRect.height - bbox.height * scale) / 2;
+                updateTransform();
+            }
+        }
+    }
+
+    /**
+     * Handles mouse down event to start panning
+     * @param {MouseEvent} event - The mouse down event
+     */
+    function handleMouseDown(event) {
+        isDragging = true;
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
+        if (panZoomContainer) {
+            panZoomContainer.style.cursor = "grabbing";
+        }
+    }
+
+    /**
+     * Handles mouse move event for panning the diagram
+     * @param {MouseEvent} event - The mouse move event
+     */
+    function handleMouseMove(event) {
+        if (isDragging) {
+            const deltaX = event.clientX - lastMouseX;
+            const deltaY = event.clientY - lastMouseY;
+            
+            translateX += deltaX;
+            translateY += deltaY;
+            
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+            
+            updateTransform();
+        }
+    }
+
+    /**
+     * Handles mouse up event to stop panning
+     */
+    function handleMouseUp() {
+        isDragging = false;
+        if (panZoomContainer) {
+            panZoomContainer.style.cursor = "grab";
+        }
+    }
+
+    /**
+     * Handles mouse wheel event for zooming
+     * @param {WheelEvent} event - The wheel event
+     */
+    function handleWheel(event) {
+        event.preventDefault();
+        const delta = event.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = Math.max(Math.min(scale * delta, 5), 0.2);
+        
+        // Zoom towards mouse position
+        const rect = panZoomContainer?.getBoundingClientRect();
+        if (rect) {
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+            
+            translateX = mouseX - (mouseX - translateX) * (newScale / scale);
+            translateY = mouseY - (mouseY - translateY) * (newScale / scale);
+        }
+        
+        scale = newScale;
+        updateTransform();
+    }
+
+    /**
+     * Handles double click event for zooming in at mouse position
+     * @param {MouseEvent} event - The double click event
+     */
+    function handleDoubleClick(event) {
+        const rect = panZoomContainer?.getBoundingClientRect();
+        if (rect) {
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+            
+            const newScale = Math.min(scale * 1.5, 5);
+            translateX = mouseX - (mouseX - translateX) * (newScale / scale);
+            translateY = mouseY - (mouseY - translateY) * (newScale / scale);
+            scale = newScale;
+            updateTransform();
+        }
+    }
+</script>
+
+<div class="mermaid-container" class:entity-container={type === "entity"}>
+    <div 
+        bind:this={panZoomContainer}
+        class="pan-zoom-wrapper"
+        on:mousedown={handleMouseDown}
+        on:mousemove={handleMouseMove}
+        on:mouseup={handleMouseUp}
+        on:mouseleave={handleMouseUp}
+        on:wheel={handleWheel}
+        on:dblclick={handleDoubleClick}
+        role="img"
+        tabindex="0"
+    >
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <button on:click={zoomIn} class="control-btn">
+                Zoom In
+            </button>
+            <button on:click={zoomOut} class="control-btn">
+                Zoom Out
+            </button>
+            <button on:click={resetZoom} class="control-btn">
+                Reset
+            </button>
+            <button on:click={fitToWindow} class="control-btn">
+                Fit
+            </button>
+        </div>
+
+        <!-- Help Text -->
+        <div class="help-text">
+            Double-click to zoom • Mouse wheel to zoom • Click & drag to pan
+        </div>
+
+        <!-- Mermaid Content -->
+        <div class="mermaid-content">
+            {#if !isRendered}
+                <div class="loading">Loading diagram...</div>
+            {/if}
+            <div bind:this={containerDiv} class="mermaid-output"></div>
+        </div>
+    </div>
+</div>
+
+<style>
     .mermaid-container {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      position: relative;
-      min-height: 100px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        position: relative;
+        min-height: 400px;
+        margin-bottom: 20px;
     }
-    
+
+    .pan-zoom-wrapper {
+        width: 100%;
+        min-height: 400px;
+        max-height: 800px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        position: relative;
+        overflow: hidden;
+        cursor: grab;
+        user-select: none;
+    }
+
+    .pan-zoom-wrapper:focus {
+        outline: 2px solid #007bff;
+        outline-offset: 2px;
+    }
+
+    .control-panel {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        display: flex;
+        gap: 5px;
+        background-color: rgba(255, 255, 255, 0.95);
+        padding: 8px;
+        border-radius: 6px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .control-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .control-btn:hover {
+        background-color: #f0f0f0;
+        border-color: #999;
+        transform: translateY(-1px);
+    }
+
+    .control-btn:active {
+        transform: translateY(0);
+    }
+
+    .help-text {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        z-index: 1000;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 6px 12px;
+        font-size: 11px;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .mermaid-content {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        padding: 20px;
+    }
+
     .loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-style: italic;
-      color: #666;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-style: italic;
+        color: #666;
+        z-index: 100;
+        font-size: 16px;
     }
-    
+
     .mermaid-output {
-      width: 100%;
-      display: flex;
-      justify-content: center;
+        position: relative;
+        transition: transform 0.1s ease-out;
     }
-  </style>
+</style>

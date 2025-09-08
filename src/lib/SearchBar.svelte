@@ -3,70 +3,101 @@
 	import { createEventDispatcher } from 'svelte';
 	import { searchQueryWritable } from '$lib/store.js';
 	import { previousSearchesWritable } from '$lib/store.js';
+	
+	/** @type {import('svelte/store').Writable<string[]>} */
+	const typedPreviousSearches = previousSearchesWritable;
+
+	/** @type {string} */
 	let searchQuery = $state('');
+	
 	let { selectedSubject, pdfBookTitles } = $props();
+	
+	/** @type {boolean} */
 	let showDropdown = $state(false);
+	
+	/** @type {boolean} */
 	let loading = $state(false);
-	const pdfLimit = 25;
+	
 	const dispatch = createEventDispatcher();
 
 	// Have to fix the no matches
-	async function handleSearchDispatch() {
-		searchQueryWritable.set(searchQuery);
-		if (!searchQuery.trim()) {
-			console.error('Search query is empty');
-			return;
-		}
+async function handleSearchDispatch() {
+	searchQueryWritable.set(searchQuery);
+	
+	/** @type {string[]} */
+	const normPdfTitles = [...pdfBookTitles];
+	console.log('normPdfTitles:', normPdfTitles, 'length:', normPdfTitles.length);
 
-		let normPdfTitles = [...pdfBookTitles];
-		updateSearch(searchQuery);
-
-		const payload = {
-			selectedSubject,
-			searchQuery,
-			pdfBookTitles
-		};
-		console.log('Payload before fetch:', payload);
-		console.log('JSON Payload:', JSON.stringify(payload));
-		if (normPdfTitles.length <= 25 && normPdfTitles.length != 0) {
-			try {
-				console.log('IN TRY CATCH');
-				loading = true;
-				dispatch('loadingChange', loading);
-
-				const response = await fetch('http://localhost:3001/api/searchquery', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify(payload)
-					});
-
-				if (!response.ok) {
-				console.log('Server error: in response ok false');
-				throw new Error(`Server error: ${response.status}`);
-				}
-
-				const result = await response.json();
-
-				loading = false;
-				dispatch('loadingChange', loading); // Notify parent search is done
-				dispatch('searchResults', result);
-
-				// Clear input and hide dropdown after successful search
-				searchQuery = '';
-				showDropdown = false;
-			} catch (error) {
-				console.error('Error in handleSearch:', error);
-				loading = false;
-				dispatch('loadingChange', loading);
-			}
-		} else if (normPdfTitles.length == 0){
-			dispatch('searchResults', 'noPdfCheckBoxesChecked');
-		} else{
-			dispatch('searchResults', 'pdfsOverLimit');
-		}
+	// Check if both search query and PDFs are missing
+	if (!searchQuery.trim() && normPdfTitles.length == 0) {
+		console.error('Both search query and PDFs are missing');
+		dispatch('searchResults', 'noSearchTermAndNoPdfs');
+		return;
 	}
+	
+	// Check if no PDFs are selected (but search query exists)
+	if (normPdfTitles.length == 0) {
+		dispatch('searchResults', 'noPdfCheckBoxesChecked');
+		return;
+	}
+	
+	// Check if PDFs are selected but no search query is provided
+	if (!searchQuery.trim()) {
+		console.error('Search query is empty but PDFs are selected');
+		dispatch('searchResults', 'noSearchTerm');
+		return;
+	}
+
+	// Check if too many PDFs are selected
+	if (normPdfTitles.length > 50) {
+		dispatch('searchResults', 'pdfsOverLimit');
+		return;
+	}
+
+	updateSearch(searchQuery);
+
+	const payload = {
+		selectedSubject,
+		searchQuery,
+		pdfBookTitles
+	};
+	console.log('Payload before fetch:', payload);
+	console.log('JSON Payload:', JSON.stringify(payload));
+
+	try {
+		loading = true;
+		dispatch('loadingChange', loading);
+
+		const response = await fetch(`/api/searchquery`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(payload)
+		});
+
+		if (!response.ok) {
+			console.log('Server error: in response ok false');
+			throw new Error(`Server error: ${response.status}`);
+		}
+
+		const result = await response.json();
+		
+		console.log('Search results:', result);
+
+		loading = false;
+		dispatch('loadingChange', loading);
+		dispatch('searchResults', result);
+
+		// Clear input and hide dropdown after successful search
+		searchQuery = '';
+		showDropdown = false;
+	} catch (error) {
+		console.error('Error in handleSearch:', error);
+		loading = false;
+		dispatch('loadingChange', loading);
+	}
+}
 
 	// Show dropdown if there are previous searches
 	const handleInputClick = () => {
@@ -85,14 +116,26 @@
 		showDropdown = false; 
 	};
 
+	/**
+	 * Handles click events outside the dropdown to close it
+	 * @param {Event} event - The click event
+	 */
 	const handleClickOutside = (event) => {
 		const dropdown = document.getElementById('search-dropdn');
 		const inputField = document.getElementById('search');
-		if (dropdown?.contains(event.target) == false && inputField?.contains(event.target) == false) {
-			showDropdown = false; // Hide dropdown if clicked outside
-		}
+
+		if (event.target) {
+        const target = /** @type {Node} */(event.target);
+        if (dropdown?.contains(target) == false && inputField?.contains(target) == false) {
+            showDropdown = false; // Hide dropdown if clicked outside
+        }
+    }
 	};
 
+	/**
+	 * Handles keyboard events on the input field
+	 * @param {KeyboardEvent} event - The keyboard event
+	 */
 	function handleInputKeydown(event) {
 		if (event.key === 'Enter') {
 			console.log('Enter key pressed');
@@ -100,14 +143,22 @@
 		}
 	}
 
+	/**
+	 * Handles deleting a search term from previous searches
+	 * @param {string} searchTerm - The search term to delete
+	 */
 	const handleDelete = (searchTerm) => {
 		previousSearchesWritable.update((searches) => {
 			return searches.filter((term) => term !== searchTerm);
 		});
 	};
 
+	/**
+	 * Updates the previous searches with a new search word
+	 * @param {string} searchWord - The search word to add to previous searches
+	 */
 	function updateSearch(searchWord) {
-		previousSearchesWritable.update((searches) => {
+		typedPreviousSearches.update((searches) => {
 			if (!searches.includes(searchWord)) {
 				searches = [searchWord, ...searches].slice(0, 10);
 			}
@@ -202,7 +253,7 @@
 			list-style: none;
 			padding: 5px 0; /* Padding around list */
 			margin: 0;
-			z-index: 10; /* semi-colon expectedscss(css-semicolonexpected)Overlay other content */
+			z-index: 10; /* Overlay other content */
 			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 		}
 

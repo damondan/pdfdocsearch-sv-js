@@ -1,3 +1,7 @@
+9.7.25
+SvelteKit even in me setting this as a Javascript project set up the jsconfig.json in a manner that
+had Javascript behave like Typescript. Set checkJs and strict to false 
+
 vitest-setup-client.js
 In a SvelteKit or Vite project using Vitest for testing, 
 vitest-setup-client.js is a setup file that runs before your 

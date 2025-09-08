@@ -7,19 +7,51 @@
 	import { PdfBookResult } from "$lib/classes/PdfBookResult.js";
 	import { searchQueryWritable } from "$lib/store.js";
 
+	/**
+	 * @typedef {Object} ISearchData
+	 * @property {string} message
+	 * @property {Object.<string, Array<{pageNum: number, text: string}>>|null} results
+	 * @property {number} total
+	 */
+
+	/** @type {string} */
 	let selectedSubject = $state("");
+	
+	/** @type {{ data: { dataPdfSubjects: string[] } }} */
 	let { data } = $props();
+	
+	/** @type {string[]} */
 	let setDataPdfSubjects = data.dataPdfSubjects;
+	
+	/** @type {import('svelte/store').Writable<string[]>} */
 	let pdfBooksGetFromSubject = writable([]);
+	
+	/** @type {string[]} */
 	let pdfBookCheckFromPdfTab = $state([]);
+	
+	/** @type {ISearchData | string | null} */
 	let mySearchData = $state(null);
-	let isLoading = false;
+	
+	/** @type {boolean} */
+	let isLoading = $state(false);
+	
+	/** @type {string[] | null} */
 	let pdfBooksRetFromSearch = $state(null);
+	
+	/** @type {PdfBookResult[]} */
 	let pdfBooksAsResultObjects = $state([]);
+	
+	/** @type {string} */
 	let activeTab = $state("pdfs");
+	
+	/** @type {PdfBookResult[]} */
 	let checkedResults = [];
+	
+	/** @type {boolean} */
 	let isCheckAll = $state(false);
-	let totalCount = $state();
+	
+	/** @type {number} */
+	let totalCount = $derived(pdfBooksAsResultObjects.length);
 
 	// onMount - receives passed { data } = $props(); from +page.server.js - setDataPdfSubjects - these are Pdf
 	// subjects and within is the pdf books or pdf content.
@@ -32,6 +64,10 @@
 	});
 
 	// openTab - facilitates changing of the tabs of pdf and results
+	/**
+	 * Opens a specific tab
+	 * @param {string} tabName - The name of the tab to open
+	 */
 	function openTab(tabName) {
 		console.log("Open tab:", tabName);
 		activeTab = tabName;
@@ -39,18 +75,29 @@
 
 	// handleSubjectChange - when there is a subject change, update the pdfs in the main body by
 	// calling handleLoadPdfTitlesFromSubject
-	function handleSubjectChange(event) {
-		const subject = event.target.value;
-		selectedSubject = subject;
-		if (subject) {
-			handleLoadPdfTitlesFromSubject(subject);
-		} else {
-			pdfBooksGetFromSubject.set([]);
-		}
-	}
+	/**
+ * @param {Event} event - The change event
+ */
+function handleSubjectChange(event) {
+    if (event.target) {
+        const target = /** @type {HTMLSelectElement} */(event.target);
+        const subject = target.value;
+        selectedSubject = subject;
+        if (subject) {
+            handleLoadPdfTitlesFromSubject(subject);
+        } else {
+            pdfBooksGetFromSubject.set([]);
+        }
+    }
+}
 
 	//handleLoadPdfTitlesFromSubject - takes a subject as argument and calls the node.js docker container api
 	//to return just the titles of those pdf books by subject or folder name
+	/**
+	 * Loads PDF titles for a given subject
+	 * @param {string} subject - The subject to load PDF titles for
+	 * @returns {Promise<void>}
+	 */
 	async function handleLoadPdfTitlesFromSubject(subject) {
 		console.log("In handleLoadPdfTitlesFromSubject");
 		try {
@@ -69,13 +116,12 @@
 	// in the SearchBar component below - on:loadingChange={handleLoadingChange}
 	//SearchBar component dispatches - dispatch('loadingChange', loading); loading is a boolean.
 	//Below there is an - if isLoading is true or false which displays the spinner.
+	/**
+	 * Handles loading state changes from SearchBar component
+	 * @param {CustomEvent<boolean>} event - The loading change event
+	 */
 	function handleLoadingChange(event) {
 		isLoading = event.detail;
-	}
-
-	function handleTimeOut(event) {
-		console.log("handleTimeOut event.detail is " + event.detail);
-		handleLoadPdfDataFromPdfTab(event);
 	}
 
 	//This is also an event listener for +page.svelte or the parent component to the SearchBar child component.
@@ -84,12 +130,29 @@
 	//function through it being used as an event listener with the data in results. mySearchData, being json data,
 	//is modified into an array format. Lastly, it steps through the array to input the pdf attributes into creating
 	//a PdfBookResult object that is than stored into a pdfBooksAsResultObjects array.
-	function handleLoadPdfDataFromPdfTab(event) {
+	/**
+	 * Handles search results from SearchBar component
+	 * @param {CustomEvent} event - The search results event
+	 */
+		function handleLoadPdfDataFromPdfTab(event) {
 		mySearchData = event.detail;
 		console.log("IN HANDLELOADPDFDATAFROMPDFTAB");
-		showTotalCount(mySearchData.total);
-
-		if (mySearchData.results != null && Object.keys(mySearchData.results).length > 0) {
+		
+		// First check if it's a string (error cases)
+		if (typeof mySearchData === "string") {
+			if (mySearchData === "noPdfCheckBoxesChecked") {
+				console.log("NO Pdfs chosen");
+				alert("Choose a Pdf.");
+			} else if (mySearchData === "pdfsOverLimit") {
+				alert("Pdf book search limit is 25");
+			} else {
+				alert("Search returned 0 for " + $searchQueryWritable);
+			}
+			return; // Exit early for string cases
+		}
+		
+		// Now TypeScript knows mySearchData is ISearchData or null
+		if (mySearchData && mySearchData.results != null && Object.keys(mySearchData.results).length > 0) {
 			console.log("MYSEARCHDATA IF STATEMENT - NOT NULL AND LENGTH > 0 ");
 			pdfBooksRetFromSearch = Object.keys(mySearchData.results);
 			// Create PdfResult instances
@@ -97,8 +160,7 @@
 			//for (const title of pdfTitlesReturned) {
 			if (pdfBooksRetFromSearch != null) {
 				for (let i = 0; i < pdfBooksRetFromSearch.length; i++) {
-					const matches =
-						mySearchData.results[pdfBooksRetFromSearch[i]];
+					const matches = mySearchData.results[pdfBooksRetFromSearch[i]];
 					for (const { pageNum, text } of matches) {
 						const sentence = findSentenceForPdfPage(
 							text,
@@ -118,13 +180,7 @@
 				console.log("PDFBOOKSASRESULTOBJECTS IS SET TO EMPTY");
 				pdfBooksAsResultObjects = [];
 			}
-		
-		} else if (mySearchData == "noPdfCheckBoxesChecked"){
-			console.log("NO Pdfs chosen");
-			alert("Choose a Pdf.");
-		}else if (mySearchData == "pdfsOverLimit"){
-			alert("Pdf book search limit is 25");
-		}else{
+		} else {
 			alert("Search returned 0 for " + $searchQueryWritable);
 		}
 	}
@@ -158,6 +214,12 @@
 	//Used in handleLoadPdfDataFromPdfTab(event) to return the sentence within the page which
 	//holds the searchQuery term. The sentence is placed initially in the PdfBlock as a quick
 	//reference and in wanting to look further, can click on the block to open the full page.
+	/**
+	 * Finds a sentence containing the search term within the page text
+	 * @param {string} text - The page text to search through
+	 * @param {string} subject - The search term to find
+	 * @returns {string} The sentence containing the search term or an error message
+	 */
 	const findSentenceForPdfPage = (text, subject) => {
 		if (!text || !subject) return "No page text or sentence found";
 		const errSubject = subject.toLowerCase();
@@ -181,6 +243,11 @@
 	//Below -> <PdfBlock {result} on:delete={handleDeleteForPdfBlock} on:change={(e) => handleCheckboxChangeForPdfBlock(result, e)}
 	//The parent listens for a dipatch from PdfBlock -> dispatch('change', { result, checked }); checkedResults is set with
 	//the proper array of PdfBookResult which has been checked in the Results tab.
+	/**
+	 * Handles checkbox changes for PDF blocks
+	 * @param {PdfBookResult} result - The PDF result object
+	 * @param {CustomEvent} event - The checkbox change event
+	 */
 	function handleCheckboxChangeForPdfBlock(result, event) {
 		console.log("IN handleCheckboxChange");
 		result.isChecked = event.detail.checked;
@@ -204,17 +271,23 @@
 	// If the Pdf tab is open, this checkbox will appear. isCheckAll is initialized on change from a
 	//$derived rune functionality. If there is equality in the derived attributes, the isAllChecked is
 	//updated to true, to than execute and update the isCheckAll to true.
-	function handleCheckAll() {
-		//pdfBooksGetFromSubject
-		isCheckAll = event.target.checked;
-		if (isCheckAll) {
-			pdfBookCheckFromPdfTab = $pdfBooksGetFromSubject;
-		} else {
-			// Uncheck all: clear the array
-			pdfBookCheckFromPdfTab = [];
+	/**
+	 * @param {Event} event - The checkbox change event
+	 */
+	function handleCheckAll(event) {
+		if (event.target) {
+			const target = /** @type {HTMLInputElement} */(event.target);
+			isCheckAll = target.checked;
+			if (isCheckAll) {
+				pdfBookCheckFromPdfTab = $pdfBooksGetFromSubject;
+			} else {
+				// Uncheck all: clear the array
+				pdfBookCheckFromPdfTab = [];
+			}
 		}
 	}
 
+	/** @type {boolean} */
 	let isAllChecked = $derived(
 		pdfBookCheckFromPdfTab.length === $pdfBooksGetFromSubject.length &&
 			$pdfBooksGetFromSubject.length > 0,
@@ -223,17 +296,17 @@
 		isCheckAll = isAllChecked;
 	});
 
+	/**
+	 * Handles delete events for PDF blocks
+	 * @param {CustomEvent} event - The delete event
+	 */
 	function handleDeleteForPdfBlock(event) {
 		const resultToDelete = event.detail; // Assuming PdfBlock emits the result
 		pdfBooksAsResultObjects = pdfBooksAsResultObjects.filter(
 			(r) => r !== resultToDelete,
 		);
-		totalCount = pdfBooksAsResultObjects.length;
 	}
 
-	function showTotalCount(totalCnt){
-  		totalCount = totalCnt;
-	}
 </script>
 
 <svelte:head>
@@ -246,16 +319,21 @@
 		<a href="/diagram">diagram</a>
 	</nav>
 	{#if activeTab == "results"}
-		<div class="download-r-checkall-buttons">
-			<input
-				type="button"
-				id="download-id"
-				value="Download"
-				onclick={handleDownloadPdfsForPdfBlock}/>
-				<div class= "total-count">
-					<p>Total Count is {totalCount}</p>
-				</div>
-		</div>
+    <div class="download-r-checkall-buttons">
+      <input
+        type="button"
+        id="download-id"
+        value="Download"
+        onclick={handleDownloadPdfsForPdfBlock}
+      />
+      <div class="total-count">
+        <p
+          style="min-width: 150px; overflow: visible; white-space: nowrap; margin: 0;"
+        >
+          Total Count is {totalCount}
+        </p>
+      </div>
+    </div>
 	{:else}
 		<div class="download-r-checkall-buttons">
 			<input
@@ -273,7 +351,6 @@
 			pdfBookTitles={pdfBookCheckFromPdfTab}
 			on:searchResults={handleLoadPdfDataFromPdfTab}
 			on:loadingChange={handleLoadingChange}
-			on:searchTimeout={handleTimeOut}
 		/>
 		{#if isLoading}
 			<div class="spinner-overlay">
@@ -284,7 +361,6 @@
 	<div class="pdfsubjects-dropdnlist">
 		<label for="pdf-options" id="pdf-label">PDF Subjects:</label>
 		<select onchange={handleSubjectChange}>
-			<!-- <option value="" disabled>Select a subject</option> -->
 			{#each setDataPdfSubjects as pdfSubject}
 				<option id="pdfsubject" value={pdfSubject}>{pdfSubject}</option>
 			{/each}

@@ -24,11 +24,24 @@
          J[(MongoDB)]
      end
  
+    DUMMY[Admin - In Terminal load pdfs with command 
+    node scripts/import-pdfs.js ] --> K[scripts/import-pdfs.js]
+
+    subgraph "PDF Import"
+      K[scripts/import-pdfs.js] --> G
+      K --> H
+      K --> I
+	  end
+
      B --"HTTP Requests"--> E
      H --"Queries"--> J
      I --"Queries"--> J
   `;
-
+  // %% Custom Styling
+  //   style A fill:#f9f,stroke:#333,stroke-width:2px
+  //   style B fill:#ff9,stroke:#333,stroke-width:2px
+  //   style E fill:#9f9,stroke:#333,stroke-width:2px
+  //   style J fill:#9ff,stroke:#333,stroke-width:2px
   const sequenceDiagramDef = `
   sequenceDiagram
      actor User
@@ -53,36 +66,82 @@
   `;
 
 const entityDiagramDef = `
-  classDiagram
-     class Book {
-         +String subject
-         +String bookTitle
-         +String fileName
-         +Date importedAt
-         +Date updatedAt
-     }
-     
-     class Page {
-         +String subject
-         +String bookTitle
-         +Number pageNum
-         +String text
-         +Date importedAt
-         +Date updatedAt
-     }
-     
-     class PdfBookResult {
-         +String _bookTitle
-         +Number _pageNum
-         +String _sentence
-         +String _pageText
-         +Boolean _isChecked
-         +toString()
-     }
-     
-     Book "1" -- "many" Page : contains
-     Page .. PdfBookResult : transforms to`;
-
+  %%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ffffff', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 
+  'lineColor': '#000000', 'secondaryColor': '#ffffff', 'tertiaryColor': '#ffffff' }}}%%
+classDiagram
+	class PdfBookResult {
+		+String _bookTitle
+		+Number _pageNum
+		+String _sentence
+		+String _pageText
+		+Boolean _isChecked
+		+toString(): String
+	}
+    
+	class Store {
+		+Writable~String~ searchQueryWritable
+		+Writable~String[]~ previousSearchesWritable
+	}
+    
+	class SearchBar {
+		[props] +String selectedSubject
+		[props] +Array~String~ pdfBookTitles
+		[reactive] +String searchQuery
+		[reactive] +Boolean showDropdown
+		[reactive] +Boolean loading
+		+Number pdfLimit
+		+handleSearchDispatch(): Promise~void~
+		+handleInputClick(): void
+		+handleSelectSearch(term: String): void
+		+handleInputKeydown(event: KeyboardEvent): void
+		+handleDelete(searchTerm: String): void
+		+updateSearch(searchWord: String): void
+		+handleClickOutside(event: Event): void
+	}
+    
+	class PageSvelteMain{
+		[props] +Object data
+		  └── dataPdfSubjects: string[]
+		[reactive] +String selectedSubject
+		+Array~String~ setDataPdfSubjects
+		+Writable~String[]~ pdfBooksGetFromSubject
+		[reactive] +Array~String~ pdfBookCheckFromPdfTab
+		[reactive] +Object mySearchData
+		[reactive] +Boolean isLoading
+		+Array~String~ pdfBooksRetFromSearch
+		[reactive] +Array~PdfBookResult~ pdfBooksAsResultObjects
+		[reactive] +String activeTab
+		+Array~PdfBookResult~ checkedResults
+		[reactive] +Boolean isCheckAll
+		[derived] +Number totalCount
+		+openTab(tabName: String): void
+		+handleSubjectChange(event: Event): void
+		+handleLoadPdfTitlesFromSubject(subject: String): Promise~void~
+		+handleLoadingChange(event: CustomEvent~Boolean~): void
+		+handleLoadPdfDataFromPdfTab(event: CustomEvent): void
+		+handleDownloadPdfsForPdfBlock(): void
+		+findSentenceForPdfPage(text: String, subject: String): String
+		+handleCheckboxChangeForPdfBlock(result: PdfBookResult, event: CustomEvent): void
+		+handleCheckAll(event: Event): void
+		+handleDeleteForPdfBlock(event: CustomEvent): void
+	}
+    
+	class PdfBlock {
+		[props] +PdfBookResult result
+		[reactive] +Boolean isExpanded
+		[reactive] +Boolean checked
+		+handleBlockClick(event: CustomEvent): void
+		+handleCheckboxChangeDispatch(event: CustomEvent): void
+		+handleDeleteDispatch(): void
+	}
+    
+	Store --> SearchBar : provides state
+	Store --> PageSvelteMain : provides state
+	PageSvelteMain --> SearchBar : passes props
+	PageSvelteMain --> PdfBlock : passes props
+	PageSvelteMain "1" o-- "many" PdfBookResult : contains
+	PdfBlock "1" -- "1" PdfBookResult : displays`;
+  
 </script>
 
 <!-- Use a completely independent container -->
@@ -154,8 +213,8 @@ const entityDiagramDef = `
     padding: 10px;
     box-sizing: border-box;
     a {
-      font-family: cursive;
-      font-size: 18px;
+      font-family: Comic sans MS;
+      font-size: 20px;
       font-weight: 700;
       text-decoration: none;
       color: black;
@@ -176,7 +235,7 @@ const entityDiagramDef = `
     flex-direction: column;
     align-items: center;
     h1, h2 {
-      font-family: cursive;
+      font-family: Comic sans MS;
       color: #333;
       text-align: center;
     }

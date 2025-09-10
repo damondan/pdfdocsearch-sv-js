@@ -21,7 +21,7 @@
 	const dispatch = createEventDispatcher();
 
 	// Have to fix the no matches
-async function handleSearchDispatch() {
+	async function handleSearchDispatch() {
 	searchQueryWritable.set(searchQuery);
 	
 	/** @type {string[]} */

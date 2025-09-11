@@ -1,6 +1,6 @@
 // api/pdf-titles/[subject].js - GET /api/pdf-titles/:subject endpoint
-const { handleCors } = require('../../lib/cors');
-const { getPdfBookTitles } = require('../../logic');
+import { handleCors } from require('../../lib/cors');
+import { getPdfBookTitles } from require('../../logic');
 
 /**
  * Serverless function to get PDF titles by subject

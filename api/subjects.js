@@ -1,6 +1,6 @@
 // api/subjects.js - GET /api/subjects endpoint
-const { handleCors } = require('../lib/cors');
-const { getSubjectsData } = require('../logic');
+import { handleCors } from require('../lib/cors');
+import { getSubjectsData } from require('../logic');
 
 /**
  * Serverless function to get all subjects

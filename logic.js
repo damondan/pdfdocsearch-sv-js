@@ -1,5 +1,5 @@
-const bookModel = require('./db/models/book');
-const pageModel = require('./db/models/page');
+import bookModel from './db/models/book';
+import pageModel from './db/models/page';
 
 async function getSubjectsData() {
   try {
@@ -36,4 +36,4 @@ async function searchPdfs(selectedSubject, searchQuery, pdfBookTitles) {
   }
 }
 
-module.exports = { getSubjectsData, getPdfBookTitles, searchPdfs };
+exports = { getSubjectsData, getPdfBookTitles, searchPdfs };

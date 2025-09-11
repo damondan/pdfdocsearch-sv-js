@@ -1,5 +1,5 @@
 //const { getCollection } = require('../connection');
-const { getCollection } = require('../../lib/mongodb');
+import { getCollection } from '../../lib/mongodb';
 
 const COLLECTION = 'books';
 
@@ -34,7 +34,7 @@ async function upsertBook(bookData) {
   );
 }
 
-module.exports = {
+exports = {
   getSubjects,
   getBooksBySubject,
   getBookTitlesBySubject,

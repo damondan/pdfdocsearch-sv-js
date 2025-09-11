@@ -101,9 +101,15 @@ function handleSubjectChange(event) {
 	async function handleLoadPdfTitlesFromSubject(subject) {
 		console.log("In handleLoadPdfTitlesFromSubject");
 		try {
-			const response = await fetch(
-				`http://localhost:3001/api/pdf-titles/${subject}`,
-			);
+			//for local
+			// const response = await fetch(
+			// 	`http://localhost:3001/api/pdf-titles/${subject}`
+			// );
+			
+			//for vercel
+			 const response = await fetch(
+			 	`/api/pdf-titles/${subject}`
+			 );
 			const data = await response.json();
 
 			pdfBooksGetFromSubject.set(data || []);

@@ -7,8 +7,14 @@
  * @returns {Promise<Object>} Object containing the PDF subjects data
  */
 export async function load({ fetch }) {
+  //for local
+  //const response = await fetch('http://localhost:3001/api/subjects');
+  
   console.log("Load Fetch");
-  const response = await fetch('http://localhost:3001/api/subjects');
+
+  //Vercel deploy
+  const response = await fetch('/api/subjects');
+  
   const dataPdfSubjects = await response.json();
 
   return {

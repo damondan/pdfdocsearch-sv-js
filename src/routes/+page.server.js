@@ -12,12 +12,12 @@ export async function load({ fetch }) {
   
   console.log("Load Fetch");
 
-  //Vercel deploy
+  // Vercel deploy
   const response = await fetch('/api/subjects');
   
   const dataPdfSubjects = await response.json();
 
   return {
-    dataPdfSubjects // Directly return the data, no "props" wrapper
+    dataPdfSubjects 
   };
 }

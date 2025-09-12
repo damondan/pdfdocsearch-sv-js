@@ -9,15 +9,19 @@
 export async function load({ fetch }) {
   //for local
   //const response = await fetch('http://localhost:3001/api/subjects');
-  
-  console.log("Load Fetch");
-
-  // Vercel deploy
-  const response = await fetch('/api/subjects');
-  
-  const dataPdfSubjects = await response.json();
-
-  return {
-    dataPdfSubjects 
-  };
+  try {
+    const response = await fetch('/api/subjects');
+    
+    if (!response.ok) {
+      console.log('API response not ok:', response.status);
+      return { dataPdfSubjects: [] }; // Return empty array on error
+    }
+    
+    const dataPdfSubjects = await response.json();
+    return { dataPdfSubjects };
+    
+  } catch (error) {
+    console.error('Load function error:', error);
+    return { dataPdfSubjects: [] }; // Return empty array on error
+  }
 }

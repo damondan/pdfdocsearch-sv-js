@@ -27,7 +27,7 @@ async function searchPdfs(selectedSubject, searchQuery, pdfBookTitles) {
       return {};
     }
     
-    const results = await pageModel.searchPages(selectedSubject, searchQuery, pdfBookTitles);
+    const results = await searchPages(selectedSubject, searchQuery, pdfBookTitles);
 
     return results;
   } catch (error) {

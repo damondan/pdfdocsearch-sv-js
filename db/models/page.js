@@ -1,5 +1,5 @@
 //const { getCollection } = require('../connection');
-import { getCollection } from '../../lib/mongodb';
+import { getCollection } from '../../lib/mongodb.js';
 
 // Collection name
 const COLLECTION = 'pages';
@@ -57,7 +57,7 @@ async function upsertPage(pageData) {
   );
 }
 
-exports = {
+export {
   upsertPage,
   searchPages,
   createIndexes

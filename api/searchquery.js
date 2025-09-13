@@ -1,6 +1,6 @@
 // api/searchquery.js - POST /api/searchquery endpoint
-import { handleCors } from '../lib/cors';
-import { searchPdfs } from'../logic';
+import { handleCors } from '../lib/cors.js';
+import { searchPdfs } from'../logic.js';
 
 /**
  * Serverless function to search PDFs

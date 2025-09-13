@@ -1,6 +1,6 @@
 // api/pdf-titles/[subject].js - GET /api/pdf-titles/:subject endpoint
-import { handleCors } from '../../lib/cors';
-import { getPdfBookTitles } from '../../logic';
+import { handleCors } from '../../lib/cors.js';
+import { getPdfBookTitles } from '../../logic.js';
 
 /**
  * Serverless function to get PDF titles by subject

@@ -1,6 +1,6 @@
 // api/subjects.js - GET /api/subjects endpoint
-import { handleCors } from '../lib/cors';
-import { getSubjectsData } from '../logic';
+import { handleCors } from '../lib/cors.js';
+import { getSubjectsData } from '../logic.js';
 
 /**
  * Serverless function to get all subjects

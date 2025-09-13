@@ -1,9 +1,9 @@
-import bookModel from './db/models/book';
-import pageModel from './db/models/page';
+import { getSubjects, getBookTitlesBySubject } from './db/models/book.js';
+import { searchPdfs } from './db/models/page.js';
 
 async function getSubjectsData() {
   try {
-    const subjects = await bookModel.getSubjects();
+    const subjects = await getSubjects();
     return subjects;
   } catch (error) {
     console.error('Error getting subjects from MongoDB:', error);
@@ -13,7 +13,7 @@ async function getSubjectsData() {
 
 async function getPdfBookTitles(subject) {
   try {
-    const titles = await bookModel.getBookTitlesBySubject(subject);
+    const titles = await getBookTitlesBySubject(subject);
     return titles;
   } catch (error) {
     console.error(`Error getting PDF titles for ${subject} from MongoDB:`, error);
@@ -36,4 +36,4 @@ async function searchPdfs(selectedSubject, searchQuery, pdfBookTitles) {
   }
 }
 
-exports = { getSubjectsData, getPdfBookTitles, searchPdfs };
+export { getSubjectsData, getPdfBookTitles, searchPdfs };

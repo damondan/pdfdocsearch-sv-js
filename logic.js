@@ -1,5 +1,5 @@
 import { getSubjects, getBookTitlesBySubject } from './db/models/book.js';
-import { searchPdfs } from './db/models/page.js';
+import { searchPages } from './db/models/page.js';
 
 async function getSubjectsData() {
   try {

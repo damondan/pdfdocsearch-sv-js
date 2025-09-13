@@ -2,6 +2,9 @@
 SvelteKit javascript jsdocs - still needs to be tsconfig.json.
 Vercel, Atlas wiring.
 Having issues connecting the mongodb.
+https://pdfdocsearch-sv-js-git-main-damon-ds-projects.vercel.app/api/test-db
+My ipaddress = 71.90.185.237/32
+Setting in Network access = 0.0.0.0/0
 
 
 vitest-setup-client.js

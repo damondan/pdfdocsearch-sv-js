@@ -1,5 +1,5 @@
 // api/subjects.js - GET /api/subjects endpoint
-import { handleCors } from '../lib/cors.js';
+// import { handleCors } from '../lib/cors.js';
 import { getSubjectsData } from '../logic.js';
 
 /**
@@ -9,7 +9,7 @@ import { getSubjectsData } from '../logic.js';
  */
 export default async function handler(req, res) {
   // Handle CORS
-  if (handleCors(req, res)) return;
+  // if (handleCors(req, res)) return;
 
   if (req.method === 'GET') {
     try {

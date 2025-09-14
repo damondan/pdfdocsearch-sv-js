@@ -1,19 +1,30 @@
+import { MongoClient } from 'mongodb';
+
 export default async function handler(req, res) {
   try {
-    // Log what Vercel actually has
-    const uri = process.env.MONGODB_URI;
-    const db = process.env.MONGODB_DATABASE;
+    const client = new MongoClient(process.env.MONGODB_URI);
+    
+    // Attempt connection
+    await client.connect();
+    
+    // Test basic operation
+    const db = client.db(process.env.MONGODB_DATABASE);
+    const collections = await db.listCollections().toArray();
+    
+    await client.close();
     
     return res.status(200).json({
-      hasUri: !!uri,
-      hasDb: !!db,
-      uriStart: uri ? uri.substring(0, 20) + '...' : 'undefined',
-      dbName: db || 'undefined'
+      success: true,
+      database: process.env.MONGODB_DATABASE,
+      collectionsCount: collections.length,
+      collections: collections.map(c => c.name)
     });
     
   } catch (error) {
     return res.status(500).json({
-      error: error.message
+      error: error.message,
+      code: error.code,
+      codeName: error.codeName
     });
   }
 }

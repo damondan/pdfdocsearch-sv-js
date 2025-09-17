@@ -23,6 +23,7 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/svelte": "^5.2.7",
+		"@types/node": "^24.5.0",
 		"@vitest/runner": "^3.0.8",
 		"@vitest/ui": "^3.0.8",
 		"c8": "^10.1.3",

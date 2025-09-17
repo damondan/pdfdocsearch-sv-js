@@ -1,9 +1,9 @@
 <script>
 	import { onMount } from "svelte";
 	import { writable } from "svelte/store";
-	import SearchBar from "$lib/SearchBar.svelte";
-	import PdfBlock from "$lib/PdfBlock.svelte";
-	import Footer from "$lib/Footer.svelte";
+	import SearchBar from "$lib/components/SearchBar.svelte";
+	import PdfBlock from "$lib/components/PdfBlock.svelte";
+	import Footer from "$lib/components/Footer.svelte";
 	import { PdfBookResult } from "$lib/classes/PdfBookResult.js";
 	import { searchQueryWritable } from "$lib/store.js";
 

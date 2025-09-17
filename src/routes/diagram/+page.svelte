@@ -1,5 +1,5 @@
 <script>
-  import Mermaid from '$lib/Mermaid.svelte';
+  import Mermaid from '$lib/components/Mermaid.svelte';
   
   // Define your diagrams
   const componentDiagramDef = `

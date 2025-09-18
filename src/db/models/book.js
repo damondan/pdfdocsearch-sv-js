@@ -6,7 +6,7 @@ const COLLECTION = 'books';
  * Get all distinct subjects from the books collection
  * @returns {Promise<string[]>} Array of subject names
  */
-async function getSubjects() {
+export async function getSubjects() {
   const collection = await getCollection(COLLECTION);
   console.log("In getSubjects and returns distinct subject" +
     "which is a field in books table");
@@ -18,7 +18,7 @@ async function getSubjects() {
  * @param {string} subject The subject to filter by
  * @returns {Promise<string[]>} Array of book titles
  */
-async function getBookTitlesBySubject(subject) {
+export async function getBookTitlesBySubject(subject) {
   const collection = await getCollection(COLLECTION);
   const books = await collection.find({ subject }, { projection: { bookTitle: 1 } }).toArray();
   return books.map(book => book.bookTitle);
@@ -29,7 +29,7 @@ async function getBookTitlesBySubject(subject) {
  * @param {string} subject The subject to filter by
  * @returns {Promise<Object[]>} Array of book documents
  */
-async function getBooksBySubject(subject) {
+export async function getBooksBySubject(subject) {
   const collection = await getCollection(COLLECTION);
   return collection.find({ subject }).toArray();
 }
@@ -43,7 +43,7 @@ async function getBooksBySubject(subject) {
  * @param {Date} bookData.importedAt When the book was imported
  * @returns {Promise<Object>} MongoDB update result
  */
-async function upsertBook(bookData) {
+export async function upsertBook(bookData) {
   const collection = await getCollection(COLLECTION);
   
   const { subject, bookTitle } = bookData;
@@ -54,10 +54,3 @@ async function upsertBook(bookData) {
     { upsert: true }
   );
 }
-
-export {
-  getSubjects,
-  getBooksBySubject,
-  getBookTitlesBySubject,
-  upsertBook
-};

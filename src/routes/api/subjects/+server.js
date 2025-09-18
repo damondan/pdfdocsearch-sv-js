@@ -1,5 +1,5 @@
 // api/subjects/+server.js - GET /api/subjects endpoint
-import { getSubjectsData } from '../../../db/logic.js';
+import { getSubjects } from '../../../db/models/book.js';
 
 /**
  * SvelteKit API route handler to get all subjects
@@ -8,7 +8,7 @@ import { getSubjectsData } from '../../../db/logic.js';
  */
 export async function GET({ request }) {
   try {
-    const subjects = await getSubjectsData();
+    const subjects = await getSubjects();
     
     return new Response(JSON.stringify(subjects), {
       status: 200,

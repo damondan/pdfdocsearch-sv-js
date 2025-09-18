@@ -2,6 +2,21 @@
 import { MongoClient } from 'mongodb';
 
 /**
+ * @type {string} MONGODB_URI
+ * @constant
+ * @readonly
+ */
+  const MONGODB_URI = "mongodb+srv://damon5185:D27934GvIkHalIef@clustersearchpdf.37gzhel.mongodb.net/?retryWrites=true&w=majority&appName=ClusterSearchPdf"
+
+  /**
+ * @type {string} MONGODB_DATABASE
+ * @constant
+ * @readonly
+ */
+
+  const MONGODB_DATABASE = "pdf_search_db";
+
+/**
  * Cached MongoDB client instance for connection reuse
  * @type {import('mongodb').MongoClient|null}
  */
@@ -20,29 +35,36 @@ let cachedDb = null;
  * @throws {Error} When connection to MongoDB fails
  */
 async function connect() {
-  if (cachedDb) {
-    console.log('Reusing cached MongoDB connection');
-    return cachedDb;
-  }
+  // if (cachedDb && !process.env.MONGODB_URI) {
+  //   console.log('Reusing cached MongoDB connection');
+  //   return cachedDb;
+  // }
 
-  if (!process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI is not defined in environment variables');
-  }
+  // if (!process.env.MONGODB_URI) {
+  //   throw new Error('MONGODB_URI is not defined in environment variables');
+  // }
 
-  // Use the same simple connection pattern that worked in book-list-app
-  const client = new MongoClient(process.env.MONGODB_URI);
+  //const client = new MongoClient(process.env.MONGODB_URI);
+  const client = new MongoClient(MONGODB_URI);
 
   try {
     await client.connect();
     console.log('Connected to MongoDB Atlas');
 
     // Use the same database selection logic that worked
-    const db = client.db('pdf_search_db');
+    //const db = client.db(process.env.MONGODB_DATABASE);
+    const db = client.db(MONGODB_DATABASE);
+
+        const adminDb = client.db().admin();
+    const dbList = await adminDb.listDatabases();
+    console.log('Available databases:', dbList.databases.map(db => db.name));
+    const collections = await db.listCollections().toArray();
+    console.log('Collections in', MONGODB_DATABASE + ':', collections.map(col => col.name));
 
     // Cache the connection
     cachedClient = client;
     cachedDb = db;
-
+    
     return db;
   } catch (error) {
     console.error('MongoDB connection error:', error);

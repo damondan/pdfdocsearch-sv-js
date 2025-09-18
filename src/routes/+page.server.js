@@ -1,27 +1,16 @@
-// src/routes/+page.server.js
+// src/routes/+page.server.js - Direct database access
+import { getSubjects } from '../db/models/book.js';
 
 /**
- * Loads PDF subjects data for the page
- * @param {Object} params - The load function parameters
- * @param {Function} params.fetch - The fetch function
+ * Loads PDF subjects data directly from database
  * @returns {Promise<Object>} Object containing the PDF subjects data
  */
-export async function load({ fetch }) {
-  //for local
-  //const response = await fetch('http://localhost:3001/api/subjects');
+export async function load() {
   try {
-    const response = await fetch('/api/subjects');
-    
-    if (!response.ok) {
-      console.log('API response not ok:', response.status);
-      return { dataPdfSubjects: [] }; // Return empty array on error
-    }
-    
-    const dataPdfSubjects = await response.json();
+    const dataPdfSubjects = await getSubjects();
     return { dataPdfSubjects };
-    
   } catch (error) {
     console.error('Load function error:', error);
-    return { dataPdfSubjects: [] }; // Return empty array on error
+    return { dataPdfSubjects: [] };
   }
 }

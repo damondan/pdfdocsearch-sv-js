@@ -1,4 +1,4 @@
-import { searchPdfs } from '../../../db/logic.js';
+import { searchPages } from '../../../db/models/page.js';
 
 /**
  * SvelteKit API route handler for searching PDFs
@@ -30,7 +30,7 @@ export async function POST({ request }) {
       });
     }
     
-    const results = await searchPdfs(selectedSubject, searchQuery, pdfBookTitles);
+    const results = await searchPages(selectedSubject, searchQuery, pdfBookTitles);
     const total = Object.values(results).reduce((sum, pages) => sum + pages.length, 0);
 
     return new Response(JSON.stringify({

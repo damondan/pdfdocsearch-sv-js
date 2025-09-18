@@ -15,7 +15,7 @@ const COLLECTION = 'pages';
  * @param {string[]} bookTitles Array of book titles to search
  * @returns {Promise<Object.<string, PageResult[]>>} Results grouped by book title
  */
-async function searchPages(subject, searchQuery, bookTitles) {
+export async function searchPages(subject, searchQuery, bookTitles) {
   const collection = await getCollection(COLLECTION);
   
   const wordRegex = new RegExp(`\\b${searchQuery}\\b`, 'i');
@@ -50,7 +50,7 @@ async function searchPages(subject, searchQuery, bookTitles) {
  * Create database indexes for efficient searching
  * @returns {Promise<void>}
  */
-async function createIndexes() {
+export async function createIndexes() {
   const collection = await getCollection(COLLECTION);
   
   await collection.createIndex({ subject: 1, bookTitle: 1, pageNum: 1 }, { unique: true });
@@ -70,7 +70,7 @@ async function createIndexes() {
  * @param {Date} pageData.importedAt When the page was imported
  * @returns {Promise<Object>} MongoDB update result
  */
-async function upsertPage(pageData) {
+export async function upsertPage(pageData) {
   const collection = await getCollection(COLLECTION);
   
   const { subject, bookTitle, pageNum } = pageData;
@@ -82,8 +82,3 @@ async function upsertPage(pageData) {
   );
 }
 
-export {
-  upsertPage,
-  searchPages,
-  createIndexes
-};

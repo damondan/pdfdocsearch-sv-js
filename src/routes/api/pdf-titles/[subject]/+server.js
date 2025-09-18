@@ -1,4 +1,4 @@
-import { getPdfBookTitles } from '../../../../db/logic.js';
+import { getBookTitlesBySubject } from '../../../../db/models/book.js';
 
 /**
  * SvelteKit API route handler for getting PDF titles by subject
@@ -18,7 +18,7 @@ export async function GET({ request, params }) {
       });
     }
 
-    const pdfTitles = await getPdfBookTitles(subject);
+    const pdfTitles = await getBookTitlesBySubject(subject);
     
     return new Response(JSON.stringify(pdfTitles), {
       status: 200,
